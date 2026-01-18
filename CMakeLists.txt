@@ -16,7 +16,8 @@ target_include_directories(${target} INTERFACE include/)
 
 set(test_target scan_tests)
 
-add_executable(${test_target} tests/main.cpp tests/scan_test.cpp)
+file(GLOB TEST_SRC_FILES "${CMAKE_SOURCE_DIR}/tests/*.cpp")
+add_executable(${test_target} ${TEST_SRC_FILES})
 target_link_libraries(${test_target} PRIVATE ${target} GTest::GTest GTest::Main)
 
 # Включаем тестирование

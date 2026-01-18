@@ -15,6 +15,5 @@
             "preLaunchTask": "GCC: Build Debug",
             "initCommands": ["settings set target.disable-aslr false"]
         }
-
     ]
 }
