@@ -101,7 +101,7 @@ constexpr std::expected<T, scan_error> parse_value_to_fmt(std::string_view input
  * @return      Значение, преобразованное в тип, или ошибку
  */
 template <parsable T>
-constexpr std::expected<T, scan_error> parse_value_auto_fmt(std::string_view input) {
+constexpr std::expected<T, scan_error> parse_value_to_type(std::string_view input) {
 
     if constexpr (is_natural<T> || std::is_floating_point_v<T>) {
         return parse_numerical<T>(input);
@@ -124,7 +124,7 @@ template <parsable T>
 std::expected<T, scan_error> constexpr parse_value_with_format(std::string_view input, std::string_view fmt) {
 
     if (fmt.length() == 0) {
-        return parse_value_auto_fmt<T>(input);
+        return parse_value_to_type<T>(input);
     } else {
         return parse_value_to_fmt<T>(input, fmt);
     }
