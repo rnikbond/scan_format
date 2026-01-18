@@ -102,6 +102,13 @@ constexpr std::expected<T, scan_error> parse_value_to_fmt(std::string_view input
  */
 template <parsable T>
 constexpr std::expected<T, scan_error> parse_value_auto_fmt(std::string_view input) {
+
+    if constexpr (is_natural<T> || std::is_floating_point_v<T>) {
+        return parse_numerical<T>(input);
+    } else if constexpr (std::same_as<T, std::string> || std::same_as<T, std::string_view>) {
+        return std::string{input};
+    }
+
     return std::unexpected(scan_error{"not implemented"});
 }
 
