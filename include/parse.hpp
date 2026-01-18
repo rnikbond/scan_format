@@ -130,8 +130,18 @@ std::expected<T, scan_error> constexpr parse_value_with_format(std::string_view 
     }
 }
 
-// Функция для проверки корректности входных данных и выделения из обеих строк интересующих данных для парсинга
-template <typename... Ts>
+/**
+ * @brief Разбор строки входных данных на список элементов
+ * @param input  Входные данные
+ * @param format Форматы
+ * @return Списки данных и форматов, или ошибку
+ *
+ * Пример:
+ *         input : "123 12 текст 321.111 строка 555"
+ *         format: "{%d} {%u} {%s} {%f} {} {}"
+ *         -> return: {"123", "12", "текст", "321.111", "строка", "555"}
+ *                    {"%d", "%u", "%s", "%f", "", ""}
+ */
 std::expected<std::pair<std::vector<std::string_view>, std::vector<std::string_view>>, scan_error>
 parse_sources(std::string_view input, std::string_view format) {
     std::vector<std::string_view> format_parts;  // Части формата между {}
