@@ -15,6 +15,11 @@ struct scan_error {
 template <typename... Ts>
 struct scan_result {
     std::tuple<Ts...> values;
+
+    template <std::size_t I>
+    const auto &value() const {
+        return std::get<I>(values);
+    }
 };
 
 }  // namespace stdx::details
