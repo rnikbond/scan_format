@@ -142,6 +142,7 @@ std::expected<T, scan_error> constexpr parse_value_with_format(std::string_view 
  *         -> return: {"123", "12", "текст", "321.111", "строка", "555"}
  *                    {"%d", "%u", "%s", "%f", "", ""}
  */
+template <typename... Ts>
 std::expected<std::pair<std::vector<std::string_view>, std::vector<std::string_view>>, scan_error>
 parse_sources(std::string_view input, std::string_view format) {
     std::vector<std::string_view> format_parts;  // Части формата между {}
