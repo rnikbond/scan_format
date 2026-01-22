@@ -154,3 +154,16 @@ TEST(ScanFailTest, CheckPartStrToInt) {
     auto result = stdx::scan<int>(input, fmt);
     ASSERT_FALSE(result);
 }
+
+/**
+ * @brief Проверка конвертации в ссылочный тип
+ * @details Ожидается ошибка
+ */
+TEST(ScanFailTest, CheckConstType) {
+
+    std::string input = "123abc";
+    std::string fmt = "{%d}";
+
+    auto result = stdx::scan<int &>(input, fmt);
+    ASSERT_FALSE(result);
+}

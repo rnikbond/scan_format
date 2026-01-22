@@ -65,22 +65,26 @@ std::expected<std::tuple<Ts...>, details::scan_error> scan_sequence(const std::v
 template <typename... Ts>
 std::expected<details::scan_result<Ts...>, details::scan_error> scan(std::string_view input, std::string_view format) {
 
-    auto parsed = details::parse_sources(input, format);
-    if (!parsed) {
-        return std::unexpected(parsed.error());
-    }
+    if constexpr (!std::is_reference_v<Ts...>) {
+        auto parsed = details::parse_sources(input, format);
+        if (!parsed) {
+            return std::unexpected(parsed.error());
+        }
 
-    auto [formats, values] = std::move(*parsed);
-    if (values.size() != formats.size() || values.size() != sizeof...(Ts)) {
-        return std::unexpected(details::scan_error{"mismatch count formats and types"});
-    }
+        auto [formats, values] = std::move(*parsed);
+        if (values.size() != formats.size() || values.size() != sizeof...(Ts)) {
+            return std::unexpected(details::scan_error{"mismatch count formats and types"});
+        }
 
-    auto result = scan_sequence<Ts...>(values, formats, std::index_sequence_for<Ts...>{});
-    if (!result) {
-        return std::unexpected(result.error());
-    }
+        auto result = scan_sequence<Ts...>(values, formats, std::index_sequence_for<Ts...>{});
+        if (!result) {
+            return std::unexpected(result.error());
+        }
 
-    return details::scan_result<Ts...>{std::move(*result)};
+        return details::scan_result<Ts...>{std::move(*result)};
+    } else {
+        return std::unexpected(details::scan_error{"reference type is not supported"});
+    }
 }
 
 }  // namespace stdx
