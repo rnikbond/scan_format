@@ -31,7 +31,10 @@ concept parsable = std::is_integral_v<T> || std::is_floating_point_v<T> || std::
 template <typename T>
 concept is_natural = std::is_integral_v<T> && !std::same_as<T, bool>;
 
-template <parsable T>
+template <typename T>
+concept numerical = std::is_integral_v<T> || std::is_floating_point_v<T>;
+
+template <numerical T>
 constexpr std::expected<T, scan_error> parse_numerical(std::string_view input) {
 
     T value;
