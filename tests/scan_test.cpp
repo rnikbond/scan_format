@@ -93,6 +93,63 @@ TEST(ScanEmptyFormatTest, CheckSupport_string) {
 }
 
 /**
+ * @brief Проверка преобразования строки с с несколькими значениями
+ * @details Ошибки не ожидается
+ */
+TEST(ScanMultiArgsTest, CheckMultiFormat) {
+    std::string input = "123 text -12 and +8 numbers 3.14";
+    std::string fmt = "{%u} {%s} {%d} {%s} {%s} {%s} {%f}";
+    auto result = stdx::scan<uint8_t, std::string, int16_t, std::string, std::string, std::string, float>(input, fmt);
+    ASSERT_TRUE(result);
+    ASSERT_EQ(std::tuple_size_v<decltype(result.value().values)>, 7);
+    EXPECT_EQ(result.value().value<0>(), 123);
+    EXPECT_EQ(result.value().value<1>(), "text");
+    EXPECT_EQ(result.value().value<2>(), -12);
+    EXPECT_EQ(result.value().value<3>(), "and");
+    EXPECT_EQ(result.value().value<4>(), "+8");
+    EXPECT_EQ(result.value().value<5>(), "numbers");
+    EXPECT_FLOAT_EQ(result.value().value<6>(), 3.14);
+}
+
+/**
+ * @brief Проверка преобразования строки с с несколькими значениями
+ * @details Ошибки не ожидается
+ */
+TEST(ScanMultiArgsTest, CheckMultiEmptyFormat) {
+    std::string input = "123 text -12 and +8 numbers 3.14";
+    std::string fmt = "{} {} {} {} {} {} {}";
+    auto result = stdx::scan<uint8_t, std::string, int16_t, std::string, std::string, std::string, float>(input, fmt);
+    ASSERT_TRUE(result);
+    ASSERT_EQ(std::tuple_size_v<decltype(result.value().values)>, 7);
+    EXPECT_EQ(result.value().value<0>(), 123);
+    EXPECT_EQ(result.value().value<1>(), "text");
+    EXPECT_EQ(result.value().value<2>(), -12);
+    EXPECT_EQ(result.value().value<3>(), "and");
+    EXPECT_EQ(result.value().value<4>(), "+8");
+    EXPECT_EQ(result.value().value<5>(), "numbers");
+    EXPECT_FLOAT_EQ(result.value().value<6>(), 3.14);
+}
+
+/**
+ * @brief Проверка преобразования строки с с несколькими значениями
+ * @details Ошибки не ожидается
+ */
+TEST(ScanMultiArgsTest, CheckMultiMixFormat) {
+    std::string input = "123 text -12 and +8 numbers 3.14";
+    std::string fmt = "{%d} {%s} {} {} {%s} {} {}";
+    auto result = stdx::scan<uint8_t, std::string, int16_t, std::string, std::string, std::string, float>(input, fmt);
+    ASSERT_TRUE(result);
+    ASSERT_EQ(std::tuple_size_v<decltype(result.value().values)>, 7);
+    EXPECT_EQ(result.value().value<0>(), 123);
+    EXPECT_EQ(result.value().value<1>(), "text");
+    EXPECT_EQ(result.value().value<2>(), -12);
+    EXPECT_EQ(result.value().value<3>(), "and");
+    EXPECT_EQ(result.value().value<4>(), "+8");
+    EXPECT_EQ(result.value().value<5>(), "numbers");
+    EXPECT_FLOAT_EQ(result.value().value<6>(), 3.14);
+}
+
+/**
  * @brief Проверка невозможности преобразования строки в указанный формат
  * @details Ожидается ошибка
  */
@@ -159,11 +216,49 @@ TEST(ScanFailTest, CheckPartStrToInt) {
  * @brief Проверка конвертации в ссылочный тип
  * @details Ожидается ошибка
  */
-TEST(ScanFailTest, CheckConstType) {
+TEST(ScanFailTest, CheckRefType) {
 
     std::string input = "123abc";
     std::string fmt = "{%d}";
 
     auto result = stdx::scan<int &>(input, fmt);
     ASSERT_FALSE(result);
+}
+
+/**
+ * @brief Проверка конвертации в const тип
+ * @details Ожидается ошибка
+ */
+TEST(ScanFailTest, CheckConstType) {
+
+    std::string input = "123abc";
+    std::string fmt = "{%d}";
+
+    auto result = stdx::scan<const int>(input, fmt);
+    ASSERT_FALSE(result);
+}
+
+/**
+ * @brief Проверка конвертации в const тип
+ * @details Ожидается ошибка
+ */
+TEST(ScanFailTest, CheckConstRefType) {
+
+    std::string input = "123abc";
+    std::string fmt = "{%d}";
+
+    auto result = stdx::scan<const int &>(input, fmt);
+    ASSERT_FALSE(result);
+}
+
+/**
+ * @brief Проверка преобразования строки с с несколькими значениями и неправильно указанным спецификатором
+ * @details Ожидается ошибка
+ */
+TEST(ScanFailTest, CheckInvalidMultiFormat) {
+    std::string input = "123 text -12 and +8 numbers 3.14";
+    //                   v    v    x
+    std::string fmt = "{%d} {%s} {%u} {} {} {} {}";
+    auto result = stdx::scan<uint8_t, std::string, int16_t, std::string, std::string, std::string, float>(input, fmt);
+    EXPECT_FALSE(result);
 }
