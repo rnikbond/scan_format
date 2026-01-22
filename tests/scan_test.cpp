@@ -24,7 +24,7 @@ TEST(ScanFormatTest, CheckSupport_double) {
     std::string fmt = "{%f}";
     auto result = stdx::scan<double>(input, fmt);
     ASSERT_TRUE(result);
-    EXPECT_EQ(result.value().value<0>(), 123.321);
+    EXPECT_DOUBLE_EQ(result.value().value<0>(), 123.321);
 }
 
 /**
@@ -71,7 +71,7 @@ TEST(ScanEmptyFormatTest, CheckSupport_double) {
     std::string fmt = "{}";
     auto result = stdx::scan<double>(input, fmt);
     ASSERT_TRUE(result);
-    EXPECT_EQ(result.value().value<0>(), 123.321);
+    EXPECT_DOUBLE_EQ(result.value().value<0>(), 123.321);
 }
 
 /**
