@@ -12,6 +12,7 @@ TEST(ScanFormatTest, CheckSupport_int) {
     std::string fmt = "{%d}";
     auto result = stdx::scan<int>(input, fmt);
     ASSERT_TRUE(result);
+    ASSERT_EQ(std::tuple_size_v<decltype(result.value().values)>, 1);
     EXPECT_EQ(result.value().value<0>(), 123);
 }
 
@@ -24,6 +25,7 @@ TEST(ScanFormatTest, CheckSupport_double) {
     std::string fmt = "{%f}";
     auto result = stdx::scan<double>(input, fmt);
     ASSERT_TRUE(result);
+    ASSERT_EQ(std::tuple_size_v<decltype(result.value().values)>, 1);
     EXPECT_DOUBLE_EQ(result.value().value<0>(), 123.321);
 }
 
@@ -36,6 +38,7 @@ TEST(ScanFormatTest, CheckSupport_string) {
     std::string fmt = "{%s}";
     auto result = stdx::scan<std::string>(input, fmt);
     ASSERT_TRUE(result);
+    ASSERT_EQ(std::tuple_size_v<decltype(result.value().values)>, 1);
     EXPECT_EQ(result.value().value<0>(), input);
 }
 
@@ -59,6 +62,7 @@ TEST(ScanEmptyFormatTest, CheckSupport_int) {
     std::string fmt = "{}";
     auto result = stdx::scan<int>(input, fmt);
     ASSERT_TRUE(result);
+    ASSERT_EQ(std::tuple_size_v<decltype(result.value().values)>, 1);
     EXPECT_EQ(result.value().value<0>(), 123);
 }
 
@@ -71,6 +75,7 @@ TEST(ScanEmptyFormatTest, CheckSupport_double) {
     std::string fmt = "{}";
     auto result = stdx::scan<double>(input, fmt);
     ASSERT_TRUE(result);
+    ASSERT_EQ(std::tuple_size_v<decltype(result.value().values)>, 1);
     EXPECT_DOUBLE_EQ(result.value().value<0>(), 123.321);
 }
 
@@ -83,6 +88,7 @@ TEST(ScanEmptyFormatTest, CheckSupport_string) {
     std::string fmt = "{}";
     auto result = stdx::scan<std::string>(input, fmt);
     ASSERT_TRUE(result);
+    ASSERT_EQ(std::tuple_size_v<decltype(result.value().values)>, 1);
     EXPECT_EQ(result.value().value<0>(), input);
 }
 
