@@ -67,8 +67,10 @@ constexpr std::expected<T, scan_error> parse_value_to_fmt(std::string_view input
 
     switch (fmt[1]) {
     case 's': {
-        if constexpr (std::same_as<T, std::string> || std::same_as<T, std::string_view>) {
+        if constexpr (std::same_as<T, std::string>) {
             return std::string{input};
+        } else if constexpr (std::same_as<T, std::string_view>) {
+            return input;
         }
         return std::unexpected(scan_error{std::format("invalid specifier for type: {}", typeid(T).name())});
     }
@@ -109,8 +111,10 @@ constexpr std::expected<T, scan_error> parse_value_to_type(std::string_view inpu
 
     if constexpr (is_natural<T> || std::is_floating_point_v<T>) {
         return parse_numerical<T>(input);
-    } else if constexpr (std::same_as<T, std::string> || std::same_as<T, std::string_view>) {
+    } else if constexpr (std::same_as<T, std::string>) {
         return std::string{input};
+    } else if constexpr (std::same_as<T, std::string_view>) {
+        return input;
     }
 
     return std::unexpected(scan_error{"not implemented"});
