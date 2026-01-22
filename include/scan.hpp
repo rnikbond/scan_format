@@ -80,7 +80,7 @@ std::expected<details::scan_result<Ts...>, details::scan_error> scan(std::string
         return std::unexpected(result.error());
     }
 
-    return details::scan_result<Ts...>{*result};
+    return details::scan_result<Ts...>{std::move(*result)};
 }
 
 }  // namespace stdx
