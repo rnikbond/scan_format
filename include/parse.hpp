@@ -36,7 +36,8 @@ constexpr std::expected<T, scan_error> parse_numerical(std::string_view input) {
 
     T value;
     auto [end_ptr, err] = std::from_chars(input.data(), input.data() + input.size(), value);
-    if (err != std::errc{}) {
+    //: Доп. проверка, что вся строка была преобразована, а не только её часть
+    if (err != std::errc{} || end_ptr != input.data() + input.size()) {
         std::error_code code = std::make_error_code(err);
         return std::unexpected(scan_error{std::format("failed parse to {}: {}", typeid(T).name(), code.message())});
     }

@@ -133,3 +133,18 @@ TEST(ScanFailTest, CheckUnknownFormat) {
         ASSERT_FALSE(result);
     }
 }
+
+/**
+ * @brief Проверка конвертации строки в число, которая начинается с цифр и заканчивается буквами
+ * @details Ожидается ошибка
+ *
+ * Тест показывает наличие проверки указателя, который возвращает std::from_chars
+ */
+TEST(ScanFailTest, CheckPartStrToInt) {
+
+    std::string input = "123abc";
+    std::string fmt = "{%d}";
+
+    auto result = stdx::scan<int>(input, fmt);
+    ASSERT_FALSE(result);
+}
