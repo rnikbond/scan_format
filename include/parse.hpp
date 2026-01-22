@@ -61,7 +61,7 @@ constexpr std::expected<T, scan_error> parse_numerical(std::string_view input) {
 template <parsable T>
 constexpr std::expected<T, scan_error> parse_value_to_fmt(std::string_view input, std::string_view fmt) {
 
-    if (fmt[0] != '%' || fmt.length() != 2) {
+    if (fmt.length() != 2 || fmt[0] != '%') {
         return std::unexpected(scan_error{std::format("invalid fmt: {}", fmt)});
     }
 
