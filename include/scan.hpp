@@ -4,6 +4,7 @@
 #include <print>
 #include <ranges>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -38,11 +39,16 @@ std::expected<std::tuple<Ts...>, details::scan_error> scan_sequence(const std::v
             }
 
             using T = std::tuple_element_t<I, std::tuple<Ts...>>;
-            auto result_at = details::parse_value_with_format<T>(values[I], formats[I]);
-            if (result_at) {
-                std::get<I>(result) = *result_at;
+            if constexpr (!std::is_const_v<T>) {
+                auto result_at = details::parse_value_with_format<T>(values[I], formats[I]);
+                if (result_at) {
+                    std::get<I>(result) = *result_at;
+                } else {
+                    err = result_at.error();
+                    has_error = true;
+                }
             } else {
-                err = result_at.error();
+                err = details::scan_error{"can not change const type"};
                 has_error = true;
             }
         }(),
@@ -65,7 +71,9 @@ std::expected<std::tuple<Ts...>, details::scan_error> scan_sequence(const std::v
 template <typename... Ts>
 std::expected<details::scan_result<Ts...>, details::scan_error> scan(std::string_view input, std::string_view format) {
 
-    if constexpr (!std::is_reference_v<Ts...>) {
+    constexpr bool has_ref = (std::is_reference_v<Ts> || ...);
+
+    if constexpr (!has_ref) {
         auto parsed = details::parse_sources(input, format);
         if (!parsed) {
             return std::unexpected(parsed.error());
