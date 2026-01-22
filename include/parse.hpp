@@ -35,7 +35,7 @@ template <parsable T>
 constexpr std::expected<T, scan_error> parse_numerical(std::string_view input) {
 
     T value;
-    auto [_, err] = std::from_chars(input.data(), input.data() + input.size(), value);
+    auto [end_ptr, err] = std::from_chars(input.data(), input.data() + input.size(), value);
     if (err != std::errc{}) {
         std::error_code code = std::make_error_code(err);
         return std::unexpected(scan_error{std::format("failed parse to {}: {}", typeid(T).name(), code.message())});
@@ -76,7 +76,7 @@ constexpr std::expected<T, scan_error> parse_value_to_fmt(std::string_view input
         return std::unexpected(scan_error{std::format("invalid specifier for type: {}", typeid(T).name())});
     }
     case 'u': {
-        if constexpr (is_natural<T>) {
+        if constexpr (is_natural<T> && std::unsigned_integral<T>) {
             return parse_numerical<T>(input);
         }
         return std::unexpected(scan_error{std::format("invalid specifier for type: {}", typeid(T).name())});
