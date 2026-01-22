@@ -25,14 +25,11 @@ concept parsable = std::is_integral_v<T> || std::is_floating_point_v<T> || std::
                    std::same_as<T, std::string>;
 
 /**
- * @brief Концепт для проверки натуральных чисел
+ * @brief Концепт для проверки числовых типов
  * @tparam T Проверяемый тип данных
  */
 template <typename T>
-concept is_natural = std::is_integral_v<T> && !std::same_as<T, bool>;
-
-template <typename T>
-concept numerical = std::is_integral_v<T> || std::is_floating_point_v<T>;
+concept numerical = (std::is_integral_v<T> || std::is_floating_point_v<T>) && !std::same_as<T, bool>;
 
 template <numerical T>
 constexpr std::expected<T, scan_error> parse_numerical(std::string_view input) {
@@ -82,7 +79,7 @@ constexpr std::expected<T, scan_error> parse_value_to_fmt(std::string_view input
         return std::unexpected(scan_error{std::format("invalid specifier for type: {}", typeid(T).name())});
     }
     case 'u': {
-        if constexpr (is_natural<T> && std::unsigned_integral<T>) {
+        if constexpr (std::unsigned_integral<T> && !std::same_as<T, bool>) {
             return parse_numerical<T>(input);
         }
         return std::unexpected(scan_error{std::format("invalid specifier for type: {}", typeid(T).name())});
@@ -109,7 +106,7 @@ constexpr std::expected<T, scan_error> parse_value_to_fmt(std::string_view input
 template <parsable T>
 constexpr std::expected<T, scan_error> parse_value_to_type(std::string_view input) {
 
-    if constexpr (is_natural<T> || std::is_floating_point_v<T>) {
+    if constexpr (numerical<T>) {
         return parse_numerical<T>(input);
     } else if constexpr (std::same_as<T, std::string>) {
         return std::string{input};
