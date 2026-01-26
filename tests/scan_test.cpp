@@ -43,17 +43,6 @@ TEST(ScanFormatTest, CheckSupport_string) {
 }
 
 /**
- * @brief Проверка выхода преобразованного значения за диапазон типа
- * @details Ожидается ошибка
- */
-TEST(ScanFormatTest, Check_int8_OutOfRange) {
-    std::string input = "200";
-    std::string fmt = "{%d}";
-    auto result = stdx::scan<int8_t>(input, fmt);
-    EXPECT_FALSE(result);
-}
-
-/**
  * @brief Проверка конвертации в const тип
  * @details Ошибки не ожидается
  */
@@ -169,6 +158,17 @@ TEST(ScanMultiArgsTest, CheckMultiMixFormat) {
     EXPECT_EQ(result.value().value<4>(), "+8");
     EXPECT_EQ(result.value().value<5>(), "numbers");
     EXPECT_FLOAT_EQ(result.value().value<6>(), 3.14);
+}
+
+/**
+ * @brief Проверка выхода преобразованного значения за диапазон типа
+ * @details Ожидается ошибка
+ */
+TEST(ScanFailTest, Check_int8_OutOfRange) {
+    std::string input = "200";
+    std::string fmt = "{%d}";
+    auto result = stdx::scan<int8_t>(input, fmt);
+    EXPECT_FALSE(result);
 }
 
 /**
