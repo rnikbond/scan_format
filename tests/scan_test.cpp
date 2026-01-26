@@ -54,6 +54,27 @@ TEST(ScanFormatTest, Check_int8_OutOfRange) {
 }
 
 /**
+ * @brief Проверка конвертации в const тип
+ * @details Ошибки не ожидается
+ */
+TEST(ScanFormatTest, CheckSupportConst) {
+
+    std::string input = "123";
+    std::string fmt = "{%d}";
+
+    auto result_int = stdx::scan<const int>(input, fmt);
+    ASSERT_TRUE(result_int);
+    ASSERT_EQ(std::tuple_size_v<decltype(result_int.value().values)>, 1);
+    EXPECT_EQ(result_int.value().value<0>(), 123);
+
+    fmt = "{%s}";
+    auto result_str = stdx::scan<const std::string>(input, fmt);
+    ASSERT_TRUE(result_str);
+    ASSERT_EQ(std::tuple_size_v<decltype(result_str.value().values)>, 1);
+    EXPECT_EQ(result_str.value().value<0>(), "123");
+}
+
+/**
  * @brief  Проверка преобразования строки в int без указания формата
  * @details Ошибки не ожидается
  */
@@ -137,7 +158,8 @@ TEST(ScanMultiArgsTest, CheckMultiEmptyFormat) {
 TEST(ScanMultiArgsTest, CheckMultiMixFormat) {
     std::string input = "123 text -12 and +8 numbers 3.14";
     std::string fmt = "{%d} {%s} {} {} {%s} {} {}";
-    auto result = stdx::scan<uint8_t, std::string, int16_t, std::string, std::string, std::string, float>(input, fmt);
+    auto result =
+        stdx::scan<const uint8_t, const std::string, int16_t, std::string, std::string, std::string, float>(input, fmt);
     ASSERT_TRUE(result);
     ASSERT_EQ(std::tuple_size_v<decltype(result.value().values)>, 7);
     EXPECT_EQ(result.value().value<0>(), 123);
@@ -229,19 +251,6 @@ TEST(ScanFailTest, CheckRefType) {
  * @brief Проверка конвертации в const тип
  * @details Ожидается ошибка
  */
-TEST(ScanFailTest, CheckConstType) {
-
-    std::string input = "123abc";
-    std::string fmt = "{%d}";
-
-    auto result = stdx::scan<const int>(input, fmt);
-    ASSERT_FALSE(result);
-}
-
-/**
- * @brief Проверка конвертации в const тип
- * @details Ожидается ошибка
- */
 TEST(ScanFailTest, CheckConstRefType) {
 
     std::string input = "123abc";
@@ -259,6 +268,7 @@ TEST(ScanFailTest, CheckInvalidMultiFormat) {
     std::string input = "123 text -12 and +8 numbers 3.14";
     //                   v    v    x
     std::string fmt = "{%d} {%s} {%u} {} {} {} {}";
-    auto result = stdx::scan<uint8_t, std::string, int16_t, std::string, std::string, std::string, float>(input, fmt);
+    auto result =
+        stdx::scan<const uint8_t, const std::string, int16_t, std::string, std::string, std::string, float>(input, fmt);
     EXPECT_FALSE(result);
 }

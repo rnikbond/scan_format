@@ -27,7 +27,7 @@ std::expected<std::tuple<Ts...>, details::scan_error> scan_sequence(const std::v
                                                                     const std::vector<std::string_view> &formats,
                                                                     std::index_sequence<I...>) {
 
-    std::tuple<Ts...> result;
+    std::tuple<std::decay_t<Ts>...> result;
 
     bool has_error = false;
     details::scan_error err;
@@ -38,17 +38,12 @@ std::expected<std::tuple<Ts...>, details::scan_error> scan_sequence(const std::v
                 return;
             }
 
-            using T = std::tuple_element_t<I, std::tuple<Ts...>>;
-            if constexpr (!std::is_const_v<T>) {
-                auto result_at = details::parse_value_with_format<T>(values[I], formats[I]);
-                if (result_at) {
-                    std::get<I>(result) = *result_at;
-                } else {
-                    err = result_at.error();
-                    has_error = true;
-                }
+            using T = std::tuple_element_t<I, std::tuple<std::decay_t<Ts>...>>;
+            auto result_at = details::parse_value_with_format<T>(values[I], formats[I]);
+            if (result_at) {
+                std::get<I>(result) = *result_at;
             } else {
-                err = details::scan_error{"can not change const type"};
+                err = result_at.error();
                 has_error = true;
             }
         }(),

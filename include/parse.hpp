@@ -34,20 +34,15 @@ concept numerical = (std::is_integral_v<T> || std::is_floating_point_v<T>) && !s
 template <numerical T>
 constexpr std::expected<T, scan_error> parse_numerical(std::string_view input) {
 
-    if constexpr (!std::is_const_v<std::remove_reference_t<T>>) {
-
-        T value;
-        auto [end_ptr, err] = std::from_chars(input.data(), input.data() + input.size(), value);
-        //: Доп. проверка, что вся строка была преобразована, а не только её часть
-        if (err != std::errc{} || end_ptr != input.data() + input.size()) {
-            std::error_code code = std::make_error_code(err);
-            return std::unexpected(scan_error{std::format("failed parse to {}: {}", typeid(T).name(), code.message())});
-        }
-
-        return value;
-    } else {
-        return std::unexpected(scan_error{"can not change const type"});
+    std::decay_t<T> value;
+    auto [end_ptr, err] = std::from_chars(input.data(), input.data() + input.size(), value);
+    //: Доп. проверка, что вся строка была преобразована, а не только её часть
+    if (err != std::errc{} || end_ptr != input.data() + input.size()) {
+        std::error_code code = std::make_error_code(err);
+        return std::unexpected(scan_error{std::format("failed parse to {}: {}", typeid(T).name(), code.message())});
     }
+
+    return value;
 }
 
 /**
