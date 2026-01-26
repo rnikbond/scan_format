@@ -13,6 +13,10 @@
 
 namespace stdx {
 
+/**
+ * @brief Концепт содержит проверки типов, которые поддерживаются для сканирования
+ * @tparam T Тип, который нужно проверить
+ */
 template <typename T>
 concept SupportTypes =
     !std::is_reference_v<T> && !std::same_as<T, bool> &&
@@ -68,6 +72,8 @@ std::expected<std::tuple<Ts...>, details::scan_error> scan_sequence(const std::v
  * @param input  Входные данные
  * @param format Форматы в виде строки, в которые нужно преобразовать
  * @return std::expected, который содержит std::tuple со значениями или ошибку, если что-то пошло не так
+ *
+ * Обработка типов, которые не поддерживаются концептом @a SupportTypes, вынесена в перегрузку шаблона функции
  */
 template <SupportTypes... Ts>
 std::expected<details::scan_result<Ts...>, details::scan_error> scan(std::string_view input, std::string_view format) {
