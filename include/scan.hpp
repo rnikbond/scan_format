@@ -13,6 +13,12 @@
 
 namespace stdx {
 
+template <typename T>
+concept SupportTypes =
+    !std::is_reference_v<T> && !std::same_as<T, bool> &&
+    (std::is_integral_v<T> || std::is_floating_point_v<T> || std::same_as<std::remove_cv_t<T>, std::string_view> ||
+     std::same_as<std::remove_cv_t<T>, std::string>);
+
 /**
  * @brief Выполняет парсинг последовательности строк в указанные форматы
  *
@@ -22,7 +28,7 @@ namespace stdx {
  * @param formats Форматы, в которые нужно преобразовать
  * @return std::expected, которые содержит данные или ошибку с описанием
  */
-template <typename... Ts, std::size_t... I>
+template <SupportTypes... Ts, std::size_t... I>
 std::expected<std::tuple<Ts...>, details::scan_error> scan_sequence(const std::vector<std::string_view> &values,
                                                                     const std::vector<std::string_view> &formats,
                                                                     std::index_sequence<I...>) {
@@ -63,31 +69,30 @@ std::expected<std::tuple<Ts...>, details::scan_error> scan_sequence(const std::v
  * @param format Форматы в виде строки, в которые нужно преобразовать
  * @return std::expected, который содержит std::tuple со значениями или ошибку, если что-то пошло не так
  */
-template <typename... Ts>
+template <SupportTypes... Ts>
 std::expected<details::scan_result<Ts...>, details::scan_error> scan(std::string_view input, std::string_view format) {
 
-    constexpr bool has_ref = (std::is_reference_v<Ts> || ...);
-
-    if constexpr (!has_ref) {
-        auto parsed = details::parse_sources(input, format);
-        if (!parsed) {
-            return std::unexpected(parsed.error());
-        }
-
-        auto [formats, values] = std::move(*parsed);
-        if (values.size() != formats.size() || values.size() != sizeof...(Ts)) {
-            return std::unexpected(details::scan_error{"mismatch count formats and types"});
-        }
-
-        auto result = scan_sequence<Ts...>(values, formats, std::index_sequence_for<Ts...>{});
-        if (!result) {
-            return std::unexpected(result.error());
-        }
-
-        return details::scan_result<Ts...>{std::move(*result)};
-    } else {
-        return std::unexpected(details::scan_error{"reference type is not supported"});
+    auto parsed = details::parse_sources(input, format);
+    if (!parsed) {
+        return std::unexpected(parsed.error());
     }
+
+    auto [formats, values] = std::move(*parsed);
+    if (values.size() != formats.size() || values.size() != sizeof...(Ts)) {
+        return std::unexpected(details::scan_error{"mismatch count formats and types"});
+    }
+
+    auto result = scan_sequence<Ts...>(values, formats, std::index_sequence_for<Ts...>{});
+    if (!result) {
+        return std::unexpected(result.error());
+    }
+
+    return details::scan_result<Ts...>{std::move(*result)};
+}
+
+template <typename... Ts>
+std::expected<details::scan_result<Ts...>, details::scan_error> scan(std::string_view input, std::string_view format) {
+    return std::unexpected(details::scan_error{"type is not supported"});
 }
 
 }  // namespace stdx
