@@ -240,7 +240,7 @@ TEST(ScanFailTest, CheckPartStrToInt) {
  */
 TEST(ScanFailTest, CheckRefType) {
 
-    std::string input = "123abc";
+    std::string input = "123";
     std::string fmt = "{%d}";
 
     auto result = stdx::scan<int &>(input, fmt);
@@ -253,7 +253,7 @@ TEST(ScanFailTest, CheckRefType) {
  */
 TEST(ScanFailTest, CheckConstRefType) {
 
-    std::string input = "123abc";
+    std::string input = "123";
     std::string fmt = "{%d}";
 
     auto result = stdx::scan<const int &>(input, fmt);
