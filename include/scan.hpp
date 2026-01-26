@@ -90,6 +90,14 @@ std::expected<details::scan_result<Ts...>, details::scan_error> scan(std::string
     return details::scan_result<Ts...>{std::move(*result)};
 }
 
+/**
+ * @brief Перегрузка функции преобразования для всех неподдерживаемых типов
+ *
+ * @tparam Ts    Список типов, в которые нужно преобразовать
+ * @param input  Входные данные
+ * @param format Форматы в виде строки, в которые нужно преобразовать
+ * @return Всегда ошибка о неподдерживаемом типе
+ */
 template <typename... Ts>
 std::expected<details::scan_result<Ts...>, details::scan_error> scan(std::string_view input, std::string_view format) {
     return std::unexpected(details::scan_error{"type is not supported"});
