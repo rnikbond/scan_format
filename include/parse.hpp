@@ -1,8 +1,14 @@
 #pragma once
 
+#include <charconv>
+#include <concepts>
+#include <cstdlib>
 #include <expected>
+#include <format>
 #include <string>
 #include <string_view>
+#include <system_error>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -10,15 +16,137 @@
 
 namespace stdx::details {
 
-// здесь ваш код
-
-// Функция для парсинга значения с учетом спецификатора формата
+/**
+ * @brief Концепт проверяет, является ли тип целочисленным, вещественным или строкой
+ * @tparam T Проверяемый тип данных
+ */
 template <typename T>
-std::expected<T, scan_error> parse_value_with_format(std::string_view input, std::string_view fmt) {
-    // здесь ваш код
+concept parsable = std::is_integral_v<T> || std::is_floating_point_v<T> || std::same_as<T, std::string_view> ||
+                   std::same_as<T, std::string>;
+
+/**
+ * @brief Концепт для проверки числовых типов
+ * @tparam T Проверяемый тип данных
+ */
+template <typename T>
+concept numerical = (std::is_integral_v<T> || std::is_floating_point_v<T>) && !std::same_as<T, bool>;
+
+template <numerical T>
+constexpr std::expected<T, scan_error> parse_numerical(std::string_view input) {
+
+    std::decay_t<T> value;
+    auto [end_ptr, err] = std::from_chars(input.data(), input.data() + input.size(), value);
+    //: Доп. проверка, что вся строка была преобразована, а не только её часть
+    if (err != std::errc{} || end_ptr != input.data() + input.size()) {
+        std::error_code code = std::make_error_code(err);
+        return std::unexpected(scan_error{std::format("failed parse to {}: {}", typeid(T).name(), code.message())});
+    }
+
+    return value;
 }
 
-// Функция для проверки корректности входных данных и выделения из обеих строк интересующих данных для парсинга
+/**
+ * @brief Преобразование строки в тип, указанный в формате
+ *
+ * @tparam T    Один из преобразуемых типов
+ * @param input Входные данные, которые нужно преобразовать
+ * @param fmt   Формат
+ * @return      Значение, преобразованное в тип, или ошибку
+ *
+ * Список преобразуемых типов указан в концепте @a parsable
+ */
+template <parsable T>
+constexpr std::expected<T, scan_error> parse_value_to_fmt(std::string_view input, std::string_view fmt) {
+
+    if (fmt.length() != 2 || fmt[0] != '%') {
+        return std::unexpected(scan_error{std::format("invalid fmt: {}", fmt)});
+    }
+
+    switch (fmt[1]) {
+    case 's': {
+        if constexpr (std::same_as<T, std::string>) {
+            return std::string{input};
+        } else if constexpr (std::same_as<T, std::string_view>) {
+            return input;
+        }
+        return std::unexpected(scan_error{std::format("invalid specifier for type: {}", typeid(T).name())});
+    }
+    case 'd': {
+        if constexpr (std::is_integral_v<T>) {
+            return parse_numerical<T>(input);
+        }
+
+        return std::unexpected(scan_error{std::format("invalid specifier for type: {}", typeid(T).name())});
+    }
+    case 'u': {
+        if constexpr (std::unsigned_integral<T> && !std::same_as<T, bool>) {
+            return parse_numerical<T>(input);
+        }
+        return std::unexpected(scan_error{std::format("invalid specifier for type: {}", typeid(T).name())});
+    }
+    case 'f': {
+        if constexpr (std::is_floating_point_v<T>) {
+            return parse_numerical<T>(input);
+        }
+        return std::unexpected(scan_error{std::format("invalid specifier for type: {}", typeid(T).name())});
+    }
+    default: {
+        return std::unexpected(scan_error{std::format("unknown format: {}", fmt)});
+    }
+    }
+}
+
+/**
+ * @brief Преобразование строки в тип, указанный в шаблонном вызове
+ *
+ * @tparam T    Тип
+ * @param input Входные данные, которые нужно преобразовать
+ * @return      Значение, преобразованное в тип, или ошибку
+ */
+template <parsable T>
+constexpr std::expected<T, scan_error> parse_value_to_type(std::string_view input) {
+
+    if constexpr (numerical<T>) {
+        return parse_numerical<T>(input);
+    } else if constexpr (std::same_as<T, std::string>) {
+        return std::string{input};
+    } else if constexpr (std::same_as<T, std::string_view>) {
+        return input;
+    }
+
+    return std::unexpected(scan_error{"not implemented"});
+}
+
+/**
+ * @brief Функция для парсинга значения с учетом спецификатора формата
+ *
+ * @tparam T    Один из типов, который можно преобразовать
+ * @param input Входные данные, которые нужно преобразовать
+ * @param fmt   Формат, в который нужно преобразовать
+ * @return      Значение, преобразованное в тип указанного формата, или ошибку
+ */
+template <parsable T>
+std::expected<T, scan_error> constexpr parse_value_with_format(std::string_view input, std::string_view fmt) {
+
+    if (fmt.length() == 0) {
+        return parse_value_to_type<T>(input);
+    } else {
+        return parse_value_to_fmt<T>(input, fmt);
+    }
+}
+
+/**
+ * @brief Разбор строки входных данных на список элементов
+ * @param input  Входные данные
+ * @param format Форматы
+ * @return Списки данных и форматов, или ошибку
+ *
+ * Пример:
+ *         input : "123 12 текст 321.111 строка 555"
+ *         format: "{%d} {%u} {%s} {%f} {} {}"
+ *         -> return: {"123", "12", "текст", "321.111", "строка", "555"}
+ *                    {"%d", "%u", "%s", "%f", "", ""}
+ */
 template <typename... Ts>
 std::expected<std::pair<std::vector<std::string_view>, std::vector<std::string_view>>, scan_error>
 parse_sources(std::string_view input, std::string_view format) {
@@ -70,4 +198,4 @@ parse_sources(std::string_view input, std::string_view format) {
     return std::pair{format_parts, input_parts};
 }
 
-} // namespace stdx::details
+}  // namespace stdx::details
